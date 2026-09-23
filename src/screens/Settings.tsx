@@ -3,6 +3,7 @@ import { useStore } from '../app/store';
 import { alarmMessage } from '../domain/korean';
 import { IntervalPicker } from '../components/IntervalPicker';
 import { Toast, useToast } from '../components/Toast';
+import { Icon } from '../components/Icon';
 
 interface Props {
   onBack: () => void;
@@ -31,7 +32,7 @@ export function Settings({ onBack }: Props) {
   const preview = async () => {
     haptics.tap();
     await notifier.notifyNow(alarmMessage(name.trim() || settings.babyName), 5000);
-    showToast('5초 뒤에 알림이 와요 🔔');
+    showToast('5초 뒤에 알림이 와요');
   };
 
   const reset = () => {
@@ -48,7 +49,7 @@ export function Settings({ onBack }: Props) {
   return (
     <main className="app page">
       <header className="topbar">
-        <button type="button" className="back-btn" aria-label="뒤로" onClick={back}>←</button>
+        <button type="button" className="back-btn" aria-label="뒤로" onClick={back}><Icon name="back" /></button>
         <h1 className="page-title">설정</h1>
         <span className="topbar__spacer" />
       </header>

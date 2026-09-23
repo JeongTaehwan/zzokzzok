@@ -9,6 +9,7 @@ import { Ring } from '../components/Ring';
 import { BigButton } from '../components/BigButton';
 import { Toast, useToast } from '../components/Toast';
 import { TypeChips } from '../components/TypeChips';
+import { Icon } from '../components/Icon';
 
 interface Props {
   onNavigate: (s: Screen) => void;
@@ -36,7 +37,7 @@ export function Home({ onNavigate }: Props) {
     haptics.success();
     setEnding(true);
     dispatch({ type: 'END', now: t });
-    showToast(`${formatClock(at)}에 알려드릴게요 🔔`);
+    showToast(`${formatClock(at)}에 알려드릴게요`);
     window.setTimeout(() => setEnding(false), 500);
   };
 
@@ -58,10 +59,10 @@ export function Home({ onNavigate }: Props) {
         </div>
         <nav className="nav">
           <button type="button" className="nav-btn" aria-label="기록" onClick={() => onNavigate('history')}>
-            <span aria-hidden="true">🗒</span>
+            <Icon name="list" />
           </button>
           <button type="button" className="nav-btn" aria-label="설정" onClick={() => onNavigate('settings')}>
-            <span aria-hidden="true">⚙</span>
+            <Icon name="gear" />
           </button>
         </nav>
       </header>
@@ -69,7 +70,7 @@ export function Home({ onNavigate }: Props) {
       {permission === 'denied' && (
         <div className="banner" role="alert">
           <span>알림이 꺼져 있어요. 앱이 닫혀 있으면 알려드릴 수 없어요.</span>
-          <button type="button" className="banner__btn" onClick={() => onNavigate('settings')}>설정</button>
+          <button type="button" className="banner__btn" onClick={() => onNavigate('settings')}>설정 열기</button>
         </div>
       )}
       {permission === 'prompt' && (
@@ -122,7 +123,7 @@ export function Home({ onNavigate }: Props) {
           )}
           {mode === 'idle' && (
             <>
-              <span className="ring__emoji" aria-hidden="true">🍼</span>
+              <span className="ring__emoji"><Icon name="bottle" size={64} strokeWidth={1.4} /></span>
               <span className="ring__sub ring__sub--lg">수유를 시작해 보세요</span>
             </>
           )}
@@ -150,11 +151,11 @@ export function Home({ onNavigate }: Props) {
       <footer className="bottom">
         {mode === 'feeding' ? (
           <BigButton variant="mint" onClick={end} disabled={ending}>
-            <span aria-hidden="true">✓</span> 수유 종료
+            <Icon name="check" /> 수유 종료
           </BigButton>
         ) : (
           <BigButton onClick={start}>
-            <span aria-hidden="true">🍼</span> 수유 시작
+            <Icon name="bottle" /> 수유 시작
           </BigButton>
         )}
       </footer>

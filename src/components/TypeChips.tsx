@@ -1,4 +1,7 @@
 import { FEEDING_TYPES, type FeedingType } from '../domain/feeding';
+import { Icon, type IconName } from '../components/Icon';
+
+const ICONS: Record<FeedingType, IconName> = { breast: 'drop', bottle: 'bottle', solid: 'bowl' };
 
 interface Props {
   value: FeedingType;
@@ -16,7 +19,7 @@ export function TypeChips({ value, onChange }: Props) {
           aria-pressed={value === t.value}
           onClick={() => onChange(t.value)}
         >
-          <span aria-hidden="true">{t.emoji}</span> {t.label}
+          <Icon name={ICONS[t.value]} size={18} /> {t.label}
         </button>
       ))}
     </div>

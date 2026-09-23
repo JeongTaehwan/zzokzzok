@@ -2,6 +2,7 @@ import { useStore } from '../app/store';
 import { groupByDay, todaySummary } from '../domain/stats';
 import { durationMs, feedingTypeLabel } from '../domain/feeding';
 import { formatClock, formatDurationKo } from '../domain/time';
+import { Icon } from '../components/Icon';
 
 interface Props {
   onBack: () => void;
@@ -22,7 +23,7 @@ export function History({ onBack }: Props) {
   return (
     <main className="app page">
       <header className="topbar">
-        <button type="button" className="back-btn" aria-label="뒤로" onClick={onBack}>←</button>
+        <button type="button" className="back-btn" aria-label="뒤로" onClick={onBack}><Icon name="back" /></button>
         <h1 className="page-title">기록</h1>
         <span className="topbar__spacer" />
       </header>

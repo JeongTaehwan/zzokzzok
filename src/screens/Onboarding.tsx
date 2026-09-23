@@ -4,6 +4,7 @@ import { alarmMessage } from '../domain/korean';
 import { DEFAULT_INTERVAL } from '../domain/alarm';
 import { BigButton } from '../components/BigButton';
 import { IntervalPicker } from '../components/IntervalPicker';
+import { Icon } from '../components/Icon';
 
 export function Onboarding() {
   const { dispatch, notifier, haptics, refreshPermission } = useStore();
@@ -44,10 +45,10 @@ export function Onboarding() {
       <header className="topbar">
         {step > 0 ? (
           <button type="button" className="back-btn" aria-label="이전" onClick={() => setStep((s) => s - 1)}>
-            ←
+            <Icon name="back" />
           </button>
         ) : (
-          <span className="brand">🍼 쪽쪽</span>
+          <span className="brand brand--icon"><Icon name="bottle" size={26} /> 쪽쪽</span>
         )}
         <span className="step-dots" aria-label={`${step + 1}단계 / 3단계`}>
           {[0, 1, 2].map((i) => (
@@ -93,7 +94,7 @@ export function Onboarding() {
         <section className="onboarding__body rise">
           <h1 className="display">알림을<br />허용해 주세요</h1>
           <div className="card card--preview">
-            <div className="preview__title">쪽쪽 🍼</div>
+            <div className="preview__title"><Icon name="bell" size={16} /> 쪽쪽</div>
             <div className="preview__msg">{alarmMessage(name)}</div>
             <div className="hint">앱이 꺼져 있어도 이렇게 알려드려요.</div>
           </div>
