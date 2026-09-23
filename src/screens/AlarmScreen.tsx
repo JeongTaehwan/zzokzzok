@@ -4,7 +4,7 @@ import { alarmMessage } from '../domain/korean';
 import { formatClock } from '../domain/time';
 import { BigButton } from '../components/BigButton';
 import { playChime } from '../app/chime';
-import { Icon } from '../components/Icon';
+import { Icon, Mascot } from '../components/Icon';
 
 export function AlarmScreen() {
   const { state, dispatch, haptics } = useStore();
@@ -40,7 +40,10 @@ export function AlarmScreen() {
   return (
     <main className="app alarm" role="alertdialog" aria-labelledby="alarm-message">
       <div className="alarm__body">
-        <span className="alarm__emoji"><Icon name="bottle" size={96} strokeWidth={1.3} /></span>
+        <span className="sparkle sparkle--1"><Icon name="star" size={26} /></span>
+        <span className="sparkle sparkle--2"><Icon name="star" size={20} /></span>
+        <span className="sparkle sparkle--3"><Icon name="star" size={18} /></span>
+        <span className="alarm__emoji"><Mascot size={150} /></span>
         <h1 className="alarm__msg" id="alarm-message" data-testid="alarm-message">{message}</h1>
         <p className="alarm__meta">
           {alarm.scheduledAt !== null ? `${formatClock(alarm.scheduledAt)} · 예약 알람` : '예약 알람'}

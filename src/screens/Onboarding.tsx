@@ -4,7 +4,7 @@ import { alarmMessage } from '../domain/korean';
 import { DEFAULT_INTERVAL } from '../domain/alarm';
 import { BigButton } from '../components/BigButton';
 import { IntervalPicker } from '../components/IntervalPicker';
-import { Icon } from '../components/Icon';
+import { Icon, Mascot } from '../components/Icon';
 
 export function Onboarding() {
   const { dispatch, notifier, haptics, refreshPermission } = useStore();
@@ -48,7 +48,7 @@ export function Onboarding() {
             <Icon name="back" />
           </button>
         ) : (
-          <span className="brand brand--icon"><Icon name="bottle" size={26} /> 쪽쪽</span>
+          <span className="brand brand--icon"><Mascot size={30} /> 쪽쪽</span>
         )}
         <span className="step-dots" aria-label={`${step + 1}단계 / 3단계`}>
           {[0, 1, 2].map((i) => (

@@ -9,7 +9,7 @@ import { Ring } from '../components/Ring';
 import { BigButton } from '../components/BigButton';
 import { Toast, useToast } from '../components/Toast';
 import { TypeChips } from '../components/TypeChips';
-import { Icon } from '../components/Icon';
+import { Icon, Mascot } from '../components/Icon';
 
 interface Props {
   onNavigate: (s: Screen) => void;
@@ -52,7 +52,7 @@ export function Home({ onNavigate }: Props) {
     <main className={`app home home--${mode}`}>
       <header className="topbar">
         <div className="brand-block">
-          <span className="brand">쪽쪽</span>
+          <span className="brand brand--icon"><Mascot size={30} /> 쪽쪽</span>
           <span className="brand-sub" data-testid="baby-name">
             {settings.babyName ? `${possessive(settings.babyName)}의 맘마 시간` : '맘마 시간'}
           </span>
@@ -123,7 +123,7 @@ export function Home({ onNavigate }: Props) {
           )}
           {mode === 'idle' && (
             <>
-              <span className="ring__emoji"><Icon name="bottle" size={64} strokeWidth={1.4} /></span>
+              <span className="ring__emoji"><Mascot size={92} mood="sleepy" /></span>
               <span className="ring__sub ring__sub--lg">수유를 시작해 보세요</span>
             </>
           )}
