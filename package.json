@@ -13,7 +13,7 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "android:apk": "npm run build && npx cap sync android && cd android && ./gradlew assembleDebug && cd .. && mkdir -p release && cp android/app/build/outputs/apk/debug/app-debug.apk release/zzokzzok-debug.apk && echo 'APK: release/zzokzzok-debug.apk'",
-    "android:release": "npm run build && npx cap sync android && cd android && ./gradlew assembleRelease",
+    "android:release": "npm run build && npx cap sync android && cd android && ./gradlew bundleRelease assembleRelease && cd .. && mkdir -p release && V=$(node -p \"require('./package.json').version\") && cp android/app/build/outputs/bundle/release/app-release.aab release/zzokzzok-$V.aab && cp android/app/build/outputs/apk/release/app-release.apk release/zzokzzok-$V-release.apk && ls -la release",
     "ios:sync": "npm run build && npx cap sync ios",
     "cap:sync": "npm run build && npx cap sync"
   },

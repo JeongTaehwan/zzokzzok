@@ -15,6 +15,8 @@
 | [docs/02-프로토타입.md](docs/02-프로토타입.md) | 디자인 컨셉·토큰, 상태 머신, 화면 와이어프레임, 인터랙션, 파일 구조 |
 | [docs/prototype/index.html](docs/prototype/index.html) | 클릭 가능한 저충실도 프로토타입 (브라우저로 열기) |
 | [docs/03-테스트계획.md](docs/03-테스트계획.md) | 테스트 전략, 요구사항 ↔ 테스트케이스 매핑, 수동 QA 체크리스트 |
+| [docs/04-배포가이드.md](docs/04-배포가이드.md) | Google Play / App Store 배포 절차, CI, 체크리스트 |
+| [docs/privacy-policy.md](docs/privacy-policy.md) | 스토어 등록용 개인정보 처리방침 |
 
 ## 빠른 시작
 
@@ -42,13 +44,15 @@ cd android && ./gradlew assembleDebug
 
 폰에 설치: APK 파일을 폰으로 옮겨 열기(출처를 알 수 없는 앱 허용) 또는 `adb install release/zzokzzok-debug.apk`
 
-### 릴리스(서명) APK
+### 스토어 배포 (릴리스 서명)
+
+업로드 키는 `android/keystore/`(git 제외)에 있다. 자세한 절차는 [docs/04-배포가이드.md](docs/04-배포가이드.md).
 
 ```bash
-keytool -genkeypair -v -keystore release.keystore -alias zzokzzok -keyalg RSA -keysize 2048 -validity 10000
-# android/keystore.properties 에 storeFile/storePassword/keyAlias/keyPassword 작성 후
-cd android && ./gradlew assembleRelease
+npm run android:release   # → release/zzokzzok-<버전>.aab (Play 업로드), release/zzokzzok-<버전>-release.apk
 ```
+
+`v0.1.0` 처럼 태그를 푸시하면 GitHub Actions 가 서명된 AAB/APK 를 빌드해 Release 에 첨부한다 (시크릿 등록 필요).
 
 ## iOS
 
