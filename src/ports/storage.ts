@@ -1,4 +1,5 @@
 /** 저장소 포트 — FR-14 */
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface StoragePort {
   get(key: string): Promise<string | null>;
@@ -6,6 +7,7 @@ export interface StoragePort {
   remove(key: string): Promise<void>;
 }
 
+/** 테스트용 메모리 저장소 */
 export class MemoryStorage implements StoragePort {
   private map = new Map<string, string>();
   async get(key: string) {
@@ -19,24 +21,25 @@ export class MemoryStorage implements StoragePort {
   }
 }
 
-export class LocalStorageAdapter implements StoragePort {
+/** 기기 저장소 (Android SharedPreferences / iOS 파일) */
+export class AsyncStorageAdapter implements StoragePort {
   async get(key: string) {
     try {
-      return localStorage.getItem(key);
+      return await AsyncStorage.getItem(key);
     } catch {
       return null;
     }
   }
   async set(key: string, value: string) {
     try {
-      localStorage.setItem(key, value);
+      await AsyncStorage.setItem(key, value);
     } catch {
-      /* 저장 공간 부족 등 — 조용히 무시 */
+      /* 저장 실패는 조용히 무시 */
     }
   }
   async remove(key: string) {
     try {
-      localStorage.removeItem(key);
+      await AsyncStorage.removeItem(key);
     } catch {
       /* ignore */
     }

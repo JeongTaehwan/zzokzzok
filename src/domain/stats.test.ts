@@ -1,5 +1,4 @@
 // 테스트 계획 2.5 — 통계 (FR-11, FR-12)
-import { describe, it, expect } from 'vitest';
 import { todaySummary, groupByDay } from './stats';
 import type { FeedingSession } from './feeding';
 import { MINUTE, HOUR } from './time';

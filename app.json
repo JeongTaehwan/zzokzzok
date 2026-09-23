@@ -1,0 +1,71 @@
+{
+  "expo": {
+    "name": "쪽쪽",
+    "slug": "zzokzzok",
+    "version": "0.2.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "zzokzzok",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "backgroundColor": "#fff5ec",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#fff5ec",
+      "dark": { "backgroundColor": "#2b2640" }
+    },
+    "ios": {
+      "bundleIdentifier": "com.zzokzzok.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "CFBundleDisplayName": "쪽쪽",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.zzokzzok.app",
+      "versionCode": 2,
+      "adaptiveIcon": {
+        "backgroundColor": "#ff9a52",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "android.permission.VIBRATE",
+        "android.permission.USE_EXACT_ALARM",
+        "android.permission.RECEIVE_BOOT_COMPLETED"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#ff9f86",
+          "defaultChannel": "feeding"
+        }
+      ],
+      [
+        "expo-font",
+        { "fonts": ["./assets/fonts/Jua-Regular.ttf"] }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#fff5ec",
+          "dark": { "backgroundColor": "#2b2640" }
+        }
+      ]
+    ]
+  }
+}

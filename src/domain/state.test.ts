@@ -1,5 +1,4 @@
 // 테스트 계획 2.6 — 상태/리듀서 (FR-01~18 통합)
-import { describe, it, expect } from 'vitest';
 import { initialState, reducer, serialize, deserialize, hydrate, type AppState } from './state';
 import { MINUTE } from './time';
 

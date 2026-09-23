@@ -1,4 +1,6 @@
 /** 알림 포트 — FR-07, FR-15, FR-16 */
+import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 import { NOTIFICATION_TITLE } from '../domain/korean';
 
 export type PermissionState = 'granted' | 'denied' | 'prompt' | 'unsupported';
@@ -11,93 +13,102 @@ export interface NotifierPort {
   cancel(): Promise<void>;
   /** 테스트 알림: delayMs 뒤 발송 */
   notifyNow(message: string, delayMs?: number): Promise<void>;
-  /** (네이티브) 정확 알람 허용 여부. 미지원이면 undefined */
-  exactAlarmAllowed?(): Promise<boolean>;
-  openExactAlarmSettings?(): Promise<void>;
 }
 
-type NotificationCtor = typeof Notification;
+export const NEXT_ID = 'zzokzzok-next';
+export const TEST_ID = 'zzokzzok-test';
+export const CHANNEL_ID = 'feeding';
 
-function getNotification(): NotificationCtor | null {
-  const n = (globalThis as { Notification?: unknown }).Notification;
-  return typeof n === 'function' ? (n as NotificationCtor) : null;
-}
-
-function mapPermission(p: NotificationPermission): PermissionState {
-  if (p === 'granted') return 'granted';
-  if (p === 'denied') return 'denied';
+function map(status: string): PermissionState {
+  if (status === 'granted') return 'granted';
+  if (status === 'denied') return 'denied';
   return 'prompt';
 }
 
-/** 브라우저(PWA)용: 앱이 열려 있는 동안 setTimeout 으로 발송 */
-export class WebNotifier implements NotifierPort {
-  private timer: ReturnType<typeof setTimeout> | null = null;
+/** expo-notifications 로컬 알림: 앱이 종료되어도 OS 가 정확한 시각에 띄운다 */
+export class ExpoNotifier implements NotifierPort {
+  async init(): Promise<void> {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+    if (Platform.OS === 'android') {
+      try {
+        await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
+          name: '맘마 알림',
+          description: '다음 수유 시간 알림',
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 400, 200, 400, 200, 600],
+          lightColor: '#FFA25B',
+          sound: 'default',
+          lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+        });
+      } catch {
+        /* 채널 생성 실패 시 기본 채널 */
+      }
+    }
+  }
 
   async checkPermission(): Promise<PermissionState> {
-    const N = getNotification();
-    return N ? mapPermission(N.permission) : 'unsupported';
+    try {
+      const { status } = await Notifications.getPermissionsAsync();
+      return map(status);
+    } catch {
+      return 'unsupported';
+    }
   }
 
   async requestPermission(): Promise<PermissionState> {
-    const N = getNotification();
-    if (!N) return 'unsupported';
     try {
-      return mapPermission(await N.requestPermission());
+      const { status } = await Notifications.requestPermissionsAsync();
+      return map(status);
     } catch {
-      return 'denied';
+      return 'unsupported';
     }
+  }
+
+  private async scheduleAt(identifier: string, at: number, message: string): Promise<void> {
+    await Notifications.scheduleNotificationAsync({
+      identifier,
+      content: {
+        title: NOTIFICATION_TITLE,
+        body: message,
+        sound: 'default',
+        data: { kind: identifier === NEXT_ID ? 'next' : 'test' },
+        ...(Platform.OS === 'android' ? { channelId: CHANNEL_ID } : {}),
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: new Date(Math.max(at, Date.now() + 1000)),
+        ...(Platform.OS === 'android' ? { channelId: CHANNEL_ID } : {}),
+      },
+    });
   }
 
   async schedule(at: number, message: string): Promise<void> {
     await this.cancel();
-    const delay = Math.max(0, at - Date.now());
-    this.timer = setTimeout(() => {
-      this.timer = null;
-      this.fire(message, 'zzokzzok-next');
-    }, delay);
+    await this.scheduleAt(NEXT_ID, at, message);
   }
 
   async cancel(): Promise<void> {
-    if (this.timer !== null) {
-      clearTimeout(this.timer);
-      this.timer = null;
+    try {
+      await Notifications.cancelScheduledNotificationAsync(NEXT_ID);
+    } catch {
+      /* 예약 없음 */
     }
   }
 
   async notifyNow(message: string, delayMs = 5000): Promise<void> {
-    setTimeout(() => this.fire(message, 'zzokzzok-test'), Math.max(0, delayMs));
-  }
-
-  private fire(message: string, tag: string) {
-    const N = getNotification();
-    if (!N || N.permission !== 'granted') return;
-    const options: NotificationOptions = {
-      body: message,
-      tag,
-      icon: './icons/icon-192.png',
-      requireInteraction: true,
-    };
     try {
-      const sw = (navigator as Navigator & { serviceWorker?: ServiceWorkerContainer }).serviceWorker;
-      if (sw && sw.controller) {
-        // 모바일 브라우저는 SW 를 통해서만 표시 가능
-        sw.ready.then((reg) => reg.showNotification(NOTIFICATION_TITLE, options)).catch(() => {
-          new N(NOTIFICATION_TITLE, options);
-        });
-        return;
-      }
-      const n = new N(NOTIFICATION_TITLE, options);
-      n.onclick = () => {
-        try {
-          window.focus();
-          n.close();
-        } catch {
-          /* ignore */
-        }
-      };
+      await Notifications.cancelScheduledNotificationAsync(TEST_ID);
     } catch {
-      /* Notification 생성 실패 (일부 모바일 브라우저) — 앱 내 알람 화면이 대신 표시됨 */
+      /* ignore */
     }
+    await this.scheduleAt(TEST_ID, Date.now() + delayMs, message);
   }
 }
 

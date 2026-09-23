@@ -1,26 +1,28 @@
-import { useCallback, useState } from 'react';
-import { useStore } from '../app/store';
-import type { Screen } from '../app/App';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useStore } from '../core/store';
+import type { Screen as ScreenName } from '../core/App';
 import { possessive } from '../domain/korean';
 import { computeAlarmAt, progress, remainingMs } from '../domain/alarm';
 import { formatClock, formatCountdown, formatDurationKo, formatElapsed, MINUTE } from '../domain/time';
 import { durationMs, feedingTypeLabel } from '../domain/feeding';
+import { fonts, useTheme } from '../theme/tokens';
+import { Screen } from '../components/Screen';
 import { Ring } from '../components/Ring';
-import { BigButton } from '../components/BigButton';
-import { Toast, useToast } from '../components/Toast';
+import { Mascot } from '../components/Mascot';
 import { TypeChips } from '../components/TypeChips';
-import { Icon, Mascot } from '../components/Icon';
+import { BigButton, Card, IconButton, Pill, Toast, useToast } from '../components/ui';
 
 interface Props {
-  onNavigate: (s: Screen) => void;
+  onNavigate: (s: ScreenName) => void;
 }
 
 export function Home({ onNavigate }: Props) {
-  const { state, dispatch, now, haptics, permission, exactAlarm, notifier, refreshPermission } = useStore();
+  const t = useTheme();
+  const { state, dispatch, now, haptics, permission, notifier, refreshPermission } = useStore();
   const { current, sessions, settings, alarm } = state;
   const [toast, showToast, clearToast] = useToast();
   const [ending, setEnding] = useState(false);
-  const clear = useCallback(() => clearToast(), [clearToast]);
 
   const last = sessions[0] ?? null;
   const mode = current ? 'feeding' : alarm.scheduledAt !== null ? 'scheduled' : 'idle';
@@ -29,16 +31,15 @@ export function Home({ onNavigate }: Props) {
     haptics.tap();
     dispatch({ type: 'START', now: Date.now() });
   };
-
   const end = () => {
     if (!current) return;
-    const t = Date.now();
-    const at = computeAlarmAt(Math.max(t, current.startedAt), settings.intervalMinutes);
+    const at = Date.now();
+    const alarmAt = computeAlarmAt(Math.max(at, current.startedAt), settings.intervalMinutes);
     haptics.success();
     setEnding(true);
-    dispatch({ type: 'END', now: t });
-    showToast(`${formatClock(at)}에 알려드릴게요`);
-    window.setTimeout(() => setEnding(false), 500);
+    dispatch({ type: 'END', now: at });
+    showToast(`${formatClock(alarmAt)}에 알려드릴게요`);
+    setTimeout(() => setEnding(false), 500);
   };
 
   const ringProgress =
@@ -49,118 +50,120 @@ export function Home({ onNavigate }: Props) {
         : 0;
 
   return (
-    <main className={`app home home--${mode}`}>
-      <header className="topbar">
-        <div className="brand-block">
-          <span className="brand brand--icon"><Mascot size={30} /> 쪽쪽</span>
-          <span className="brand-sub" data-testid="baby-name">
-            {settings.babyName ? `${possessive(settings.babyName)}의 맘마 시간` : '맘마 시간'}
-          </span>
-        </div>
-        <nav className="nav">
-          <button type="button" className="nav-btn" aria-label="기록" onClick={() => onNavigate('history')}>
-            <Icon name="list" />
-          </button>
-          <button type="button" className="nav-btn" aria-label="설정" onClick={() => onNavigate('settings')}>
-            <Icon name="gear" />
-          </button>
-        </nav>
-      </header>
+    <Screen>
+      <View style={styles.topbar}>
+        <View style={{ gap: 4 }}>
+          <View style={styles.brand}>
+            <Mascot size={30} />
+            <Text style={[styles.brandText, { color: t.accentDeep }]}>쪽쪽</Text>
+          </View>
+          <Pill color={t.lavender} textColor={t.scheme === 'dark' ? '#2b2640' : t.ink}>
+            <Text testID="baby-name">{settings.babyName ? `${possessive(settings.babyName)}의 맘마 시간` : '맘마 시간'}</Text>
+          </Pill>
+        </View>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <IconButton icon="list" label="기록" onPress={() => onNavigate('history')} />
+          <IconButton icon="gear" label="설정" onPress={() => onNavigate('settings')} />
+        </View>
+      </View>
 
       {permission === 'denied' && (
-        <div className="banner" role="alert">
-          <span>알림이 꺼져 있어요. 앱이 닫혀 있으면 알려드릴 수 없어요.</span>
-          <button type="button" className="banner__btn" onClick={() => onNavigate('settings')}>설정 열기</button>
-        </div>
+        <View style={[styles.banner, { backgroundColor: t.rose, borderBottomColor: t.roseDeep }]} accessibilityRole="alert">
+          <Text style={{ color: '#fff', fontSize: 14, flex: 1 }}>알림이 꺼져 있어요. 앱이 닫혀 있으면 알려드릴 수 없어요.</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel="설정 열기" onPress={() => onNavigate('settings')} style={[styles.bannerBtn, { backgroundColor: t.bg2 }]}>
+            <Text style={{ color: t.ink, fontSize: 13 }}>설정 열기</Text>
+          </Pressable>
+        </View>
       )}
       {permission === 'prompt' && (
-        <div className="banner banner--soft">
-          <span>알림을 허용하면 앱이 꺼져 있어도 알려드려요.</span>
-          <button
-            type="button"
-            className="banner__btn"
-            onClick={async () => {
+        <View style={[styles.banner, { backgroundColor: t.bg2, borderColor: t.line, borderWidth: 2, borderBottomWidth: 4 }]}>
+          <Text style={{ color: t.ink2, fontSize: 14, flex: 1 }}>알림을 허용하면 앱이 꺼져 있어도 알려드려요.</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="허용"
+            onPress={async () => {
               await notifier.requestPermission();
               await refreshPermission();
             }}
+            style={[styles.bannerBtn, { backgroundColor: t.accent }]}
           >
-            허용
-          </button>
-        </div>
-      )}
-      {permission === 'granted' && !exactAlarm && notifier.openExactAlarmSettings && (
-        <div className="banner banner--soft">
-          <span>정확한 시간에 울리려면 알람 권한이 필요해요.</span>
-          <button type="button" className="banner__btn" onClick={() => void notifier.openExactAlarmSettings?.()}>
-            허용
-          </button>
-        </div>
+            <Text style={{ color: t.accentInk, fontSize: 13 }}>허용</Text>
+          </Pressable>
+        </View>
       )}
 
-      <section className="hero rise">
+      <View style={styles.hero}>
         <Ring progress={ringProgress} mode={mode}>
           {mode === 'feeding' && current && (
             <>
-              <span className="ring__label">수유 중</span>
-              <span className="ring__big" data-testid="elapsed">{formatElapsed(durationMs(current, now))}</span>
-              <span className="ring__sub">{formatClock(current.startedAt)} 부터</span>
-              <span className="adjust">
-                <button type="button" className="adjust__btn" onClick={() => dispatch({ type: 'ADJUST_START', deltaMs: -5 * MINUTE, now: Date.now() })}>
-                  -5분
-                </button>
-                <button type="button" className="adjust__btn" onClick={() => dispatch({ type: 'ADJUST_START', deltaMs: 5 * MINUTE, now: Date.now() })}>
-                  +5분
-                </button>
-              </span>
+              <Pill color={t.mint} textColor={t.mintInk}>수유 중</Pill>
+              <Text testID="elapsed" style={[styles.big, { color: t.ink }]}>{formatElapsed(durationMs(current, now))}</Text>
+              <Text style={{ fontSize: 13, color: t.ink2 }}>{formatClock(current.startedAt)} 부터</Text>
+              <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+                {[-5, 5].map((d) => (
+                  <Pressable
+                    key={d}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${d > 0 ? '+' : ''}${d}분`}
+                    onPress={() => dispatch({ type: 'ADJUST_START', deltaMs: d * MINUTE, now: Date.now() })}
+                    style={[styles.adjust, { backgroundColor: t.bg2, borderColor: t.line }]}
+                  >
+                    <Text style={{ fontSize: 12, color: t.ink2 }}>{d > 0 ? '+' : ''}{d}분</Text>
+                  </Pressable>
+                ))}
+              </View>
             </>
           )}
           {mode === 'scheduled' && alarm.scheduledAt !== null && (
             <>
-              <span className="ring__label">다음 맘마까지</span>
-              <span className="ring__big" data-testid="countdown">{formatCountdown(remainingMs(alarm.scheduledAt, now))}</span>
-              <span className="ring__sub">{formatClock(alarm.scheduledAt)}에 알려요</span>
+              <Pill color={t.butter} textColor="#4d3a08">다음 맘마까지</Pill>
+              <Text testID="countdown" style={[styles.big, { color: t.ink }]}>{formatCountdown(remainingMs(alarm.scheduledAt, now))}</Text>
+              <Text style={{ fontSize: 13, color: t.ink2 }}>{formatClock(alarm.scheduledAt)}에 알려요</Text>
             </>
           )}
           {mode === 'idle' && (
             <>
-              <span className="ring__emoji"><Mascot size={92} mood="sleepy" /></span>
-              <span className="ring__sub ring__sub--lg">수유를 시작해 보세요</span>
+              <Mascot size={92} mood="sleepy" motion="bob" />
+              <Text style={{ fontSize: 16, color: t.ink, marginTop: 6 }}>수유를 시작해 보세요</Text>
             </>
           )}
         </Ring>
-      </section>
+      </View>
 
-      {mode === 'feeding' && (
-        <section className="rise" style={{ animationDelay: '80ms' }}>
-          <TypeChips value={current!.type} onChange={(t) => dispatch({ type: 'SET_TYPE', feedingType: t })} />
-        </section>
-      )}
+      {mode === 'feeding' && current && <TypeChips value={current.type} onChange={(ft) => dispatch({ type: 'SET_TYPE', feedingType: ft })} />}
+
+      <View style={{ flex: 1 }} />
 
       {mode !== 'feeding' && last && (
-        <section className="card last-card rise" style={{ animationDelay: '120ms' }}>
-          <span className="last-card__title">마지막 수유</span>
-          <span className="last-card__time">
+        <Card>
+          <View style={[styles.cardDot, { backgroundColor: t.pink, borderColor: t.bg2 }]} />
+          <Text style={{ fontSize: 12, color: t.ink3, letterSpacing: 1 }}>마지막 수유</Text>
+          <Text style={{ fontFamily: fonts.display, fontSize: 22, color: t.ink }}>
             {formatClock(last.startedAt)} ~ {formatClock(last.endedAt ?? last.startedAt)}
-          </span>
-          <span className="last-card__meta">
-            {formatDurationKo(durationMs(last))} · {feedingTypeLabel(last.type)}
-          </span>
-        </section>
+          </Text>
+          <Text style={{ fontSize: 13, color: t.ink2 }}>{formatDurationKo(durationMs(last))} · {feedingTypeLabel(last.type)}</Text>
+        </Card>
       )}
 
-      <footer className="bottom">
-        {mode === 'feeding' ? (
-          <BigButton variant="mint" onClick={end} disabled={ending}>
-            <Icon name="check" /> 수유 종료
-          </BigButton>
-        ) : (
-          <BigButton onClick={start}>
-            <Icon name="bottle" /> 수유 시작
-          </BigButton>
-        )}
-      </footer>
+      {mode === 'feeding' ? (
+        <BigButton label="수유 종료" icon="check" variant="mint" onPress={end} disabled={ending} />
+      ) : (
+        <BigButton label="수유 시작" icon="bottle" onPress={start} />
+      )}
 
-      <Toast message={toast} onDone={clear} />
-    </main>
+      <Toast message={toast} onDone={clearToast} />
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  topbar: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  brandText: { fontFamily: fonts.display, fontSize: 26 },
+  banner: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 22, borderBottomWidth: 4 },
+  bannerBtn: { borderRadius: 999, paddingVertical: 8, paddingHorizontal: 14 },
+  hero: { alignItems: 'center', paddingVertical: 6 },
+  big: { fontFamily: fonts.display, fontSize: 48, lineHeight: 54, fontVariant: ['tabular-nums'] },
+  adjust: { borderWidth: 2, borderBottomWidth: 3, borderRadius: 999, paddingVertical: 4, paddingHorizontal: 10 },
+  cardDot: { position: 'absolute', right: 16, top: -10, width: 22, height: 22, borderRadius: 11, borderWidth: 3 },
+});

@@ -1,5 +1,4 @@
 // 테스트 계획 2.4 — 알람 계산 (FR-02, FR-05, FR-08, FR-09)
-import { describe, it, expect } from 'vitest';
 import {
   MIN_INTERVAL, MAX_INTERVAL, DEFAULT_INTERVAL, SNOOZE_MINUTES,
   clampInterval, computeAlarmAt, isDue, snoozeAt, remainingMs, progress,

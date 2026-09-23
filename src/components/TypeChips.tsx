@@ -1,8 +1,10 @@
+import { StyleSheet, View } from 'react-native';
 import { FEEDING_TYPES, type FeedingType } from '../domain/feeding';
-import { Icon, type IconName } from '../components/Icon';
+import type { IconName } from './Icon';
+import { Chip, type ChipTone } from './ui';
 
 const ICONS: Record<FeedingType, IconName> = { breast: 'drop', bottle: 'bottle', solid: 'bowl' };
-const TONES: Record<FeedingType, string> = { breast: 'pink', bottle: 'sky', solid: 'butter' };
+const TONES: Record<FeedingType, ChipTone> = { breast: 'pink', bottle: 'sky', solid: 'butter' };
 
 interface Props {
   value: FeedingType;
@@ -11,19 +13,14 @@ interface Props {
 
 export function TypeChips({ value, onChange }: Props) {
   return (
-    <div className="chips chips--center" role="group" aria-label="수유 종류">
+    <View style={styles.row} accessibilityLabel="수유 종류">
       {FEEDING_TYPES.map((t) => (
-        <button
-          key={t.value}
-          type="button"
-          className="chip chip--lg"
-          aria-pressed={value === t.value}
-          data-tone={TONES[t.value]}
-          onClick={() => onChange(t.value)}
-        >
-          <Icon name={ICONS[t.value]} size={18} /> {t.label}
-        </button>
+        <Chip key={t.value} label={t.label} icon={ICONS[t.value]} tone={TONES[t.value]} selected={value === t.value} onPress={() => onChange(t.value)} large />
       ))}
-    </div>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  row: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
+});

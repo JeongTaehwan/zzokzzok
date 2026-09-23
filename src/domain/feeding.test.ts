@@ -1,5 +1,4 @@
 // 테스트 계획 2.3 — 수유 세션 (FR-03, FR-04, FR-13, FR-18)
-import { describe, it, expect } from 'vitest';
 import { startSession, endSession, durationMs, adjustStart, setType } from './feeding';
 import { MINUTE } from './time';
 

@@ -1,5 +1,4 @@
 // 테스트 계획 2.2 — 시간 포맷 (FR-03, FR-05, FR-11)
-import { describe, it, expect } from 'vitest';
 import {
   MINUTE, HOUR, formatElapsed, formatCountdown, formatDurationKo, formatClock, dayKey, dayLabel,
 } from './time';

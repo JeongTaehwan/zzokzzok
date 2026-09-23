@@ -1,5 +1,4 @@
 // 테스트 계획 2.1 — 문구 규칙 (FR-06, FR-01)
-import { describe, it, expect } from 'vitest';
 import { hasBatchim, vocative, alarmMessage, possessive, DEFAULT_BABY_NAME } from './korean';
 
 describe('hasBatchim', () => {

@@ -1,96 +1,72 @@
-// 테스트 계획 2.7 — 웹 알림 포트 (FR-07)
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { WebNotifier, NoopNotifier } from './notifier';
+// 테스트 계획 2.7 — 알림 포트 (FR-07, FR-15, FR-16) — expo-notifications 는 jest.setup 에서 모킹
+import * as Notifications from 'expo-notifications';
+import { ExpoNotifier, NoopNotifier, NEXT_ID, TEST_ID } from './notifier';
 
-class FakeNotification {
-  static instances: FakeNotification[] = [];
-  static permission: NotificationPermission = 'granted';
-  static requestPermission = vi.fn(async () => FakeNotification.permission);
-  onclick: (() => void) | null = null;
-  close = vi.fn();
-  constructor(public title: string, public options?: NotificationOptions) {
-    FakeNotification.instances.push(this);
-  }
-}
+const mocked = Notifications as jest.Mocked<typeof Notifications>;
 
-describe('WebNotifier', () => {
+describe('ExpoNotifier', () => {
   beforeEach(() => {
-    vi.useFakeTimers();
-    FakeNotification.instances = [];
-    FakeNotification.permission = 'granted';
-    vi.stubGlobal('Notification', FakeNotification);
+    jest.clearAllMocks();
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 8, 24, 2, 0, 0));
   });
-  afterEach(() => {
-    vi.useRealTimers();
-    vi.unstubAllGlobals();
+  afterEach(() => jest.useRealTimers());
+
+  it('TC-P01 예약 시각·문구로 로컬 알림을 예약한다', async () => {
+    const n = new ExpoNotifier();
+    const at = Date.now() + 180 * 60_000;
+    await n.schedule(at, '지민아~ 맘마먹자');
+    expect(mocked.scheduleNotificationAsync).toHaveBeenCalledTimes(1);
+    const arg = mocked.scheduleNotificationAsync.mock.calls[0][0];
+    expect(arg.identifier).toBe(NEXT_ID);
+    expect(arg.content.body).toBe('지민아~ 맘마먹자');
+    expect(arg.content.title).toContain('쪽쪽');
+    expect((arg.trigger as { date: Date }).date.getTime()).toBe(at);
   });
 
-  it('TC-P01 예약 시각에 Notification 1회 생성', async () => {
-    const n = new WebNotifier();
-    await n.schedule(Date.now() + 1000, '지민아~ 맘마먹자');
-    expect(FakeNotification.instances).toHaveLength(0);
-    vi.advanceTimersByTime(999);
-    expect(FakeNotification.instances).toHaveLength(0);
-    vi.advanceTimersByTime(1);
-    expect(FakeNotification.instances).toHaveLength(1);
-    expect(FakeNotification.instances[0].options?.body).toBe('지민아~ 맘마먹자');
-    expect(FakeNotification.instances[0].title).toContain('쪽쪽');
+  it('TC-P02 재예약하면 기존 예약을 먼저 취소한다 (항상 1개)', async () => {
+    const n = new ExpoNotifier();
+    await n.schedule(Date.now() + 60_000, 'a');
+    await n.schedule(Date.now() + 120_000, 'b');
+    expect(mocked.cancelScheduledNotificationAsync).toHaveBeenCalledWith(NEXT_ID);
+    expect(mocked.cancelScheduledNotificationAsync).toHaveBeenCalledTimes(2);
+    expect(mocked.scheduleNotificationAsync).toHaveBeenCalledTimes(2);
   });
 
-  it('TC-P02 재예약하면 이전 타이머 취소', async () => {
-    const n = new WebNotifier();
-    await n.schedule(Date.now() + 1000, 'a');
-    await n.schedule(Date.now() + 5000, 'b');
-    vi.advanceTimersByTime(1000);
-    expect(FakeNotification.instances).toHaveLength(0);
-    vi.advanceTimersByTime(4000);
-    expect(FakeNotification.instances).toHaveLength(1);
-    expect(FakeNotification.instances[0].options?.body).toBe('b');
-  });
-
-  it('TC-P03 cancel 하면 울리지 않음', async () => {
-    const n = new WebNotifier();
-    await n.schedule(Date.now() + 1000, 'a');
+  it('TC-P03 cancel 은 다음 수유 알림만 취소', async () => {
+    const n = new ExpoNotifier();
     await n.cancel();
-    vi.advanceTimersByTime(2000);
-    expect(FakeNotification.instances).toHaveLength(0);
+    expect(mocked.cancelScheduledNotificationAsync).toHaveBeenCalledWith(NEXT_ID);
   });
 
-  it('이미 지난 시각이면 즉시 발송', async () => {
-    const n = new WebNotifier();
-    await n.schedule(Date.now() - 1, 'late');
-    vi.advanceTimersByTime(0);
-    expect(FakeNotification.instances).toHaveLength(1);
+  it('이미 지난 시각이면 1초 뒤로 보정해서 예약', async () => {
+    const n = new ExpoNotifier();
+    await n.schedule(Date.now() - 5000, 'late');
+    const arg = mocked.scheduleNotificationAsync.mock.calls[0][0];
+    expect((arg.trigger as { date: Date }).date.getTime()).toBe(Date.now() + 1000);
   });
 
-  it('권한이 없으면 Notification 생성하지 않고 조용히 통과', async () => {
-    FakeNotification.permission = 'denied';
-    const n = new WebNotifier();
-    await n.schedule(Date.now() + 10, 'x');
-    vi.advanceTimersByTime(10);
-    expect(FakeNotification.instances).toHaveLength(0);
-  });
-
-  it('checkPermission / requestPermission', async () => {
-    const n = new WebNotifier();
+  it('TC-P05 권한 상태 매핑', async () => {
+    const n = new ExpoNotifier();
     expect(await n.checkPermission()).toBe('granted');
-    FakeNotification.permission = 'denied';
-    expect(await n.requestPermission()).toBe('denied');
+    mocked.getPermissionsAsync.mockResolvedValueOnce({ status: 'denied', granted: false } as never);
+    expect(await n.checkPermission()).toBe('denied');
+    mocked.requestPermissionsAsync.mockResolvedValueOnce({ status: 'undetermined', granted: false } as never);
+    expect(await n.requestPermission()).toBe('prompt');
   });
 
-  it('Notification API 가 없으면 unsupported', async () => {
-    vi.stubGlobal('Notification', undefined);
-    const n = new WebNotifier();
-    expect(await n.checkPermission()).toBe('unsupported');
-    expect(await n.requestPermission()).toBe('unsupported');
-    await expect(n.schedule(Date.now() + 1, 'x')).resolves.toBeUndefined();
+  it('FR-16 알림 미리보기는 별도 id 로 지연 예약', async () => {
+    const n = new ExpoNotifier();
+    await n.notifyNow('테스트', 5000);
+    const arg = mocked.scheduleNotificationAsync.mock.calls[0][0];
+    expect(arg.identifier).toBe(TEST_ID);
+    expect((arg.trigger as { date: Date }).date.getTime()).toBe(Date.now() + 5000);
   });
 
-  it('notifyNow 는 지연 후 발송', async () => {
-    const n = new WebNotifier();
-    await n.notifyNow('테스트', 500);
-    vi.advanceTimersByTime(500);
-    expect(FakeNotification.instances).toHaveLength(1);
+  it('init 은 핸들러와 안드로이드 채널을 설정', async () => {
+    const n = new ExpoNotifier();
+    await n.init();
+    expect(mocked.setNotificationHandler).toHaveBeenCalled();
   });
 });
 

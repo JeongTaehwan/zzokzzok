@@ -1,4 +1,6 @@
 /** 햅틱 포트 */
+import * as Haptics from 'expo-haptics';
+import { Vibration } from 'react-native';
 
 export interface HapticsPort {
   tap(): void;
@@ -14,25 +16,25 @@ export class NoopHaptics implements HapticsPort {
   stop() {}
 }
 
-/** navigator.vibrate 기반 (브라우저 / WebView) */
-export class WebHaptics implements HapticsPort {
-  private vibrate(pattern: number | number[]) {
+export class ExpoHaptics implements HapticsPort {
+  tap() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+  }
+  success() {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+  }
+  alarm() {
     try {
-      navigator.vibrate?.(pattern);
+      Vibration.vibrate([0, 400, 200, 400, 200, 600]);
     } catch {
       /* ignore */
     }
   }
-  tap() {
-    this.vibrate(15);
-  }
-  success() {
-    this.vibrate([20, 40, 20]);
-  }
-  alarm() {
-    this.vibrate([400, 200, 400, 200, 600]);
-  }
   stop() {
-    this.vibrate(0);
+    try {
+      Vibration.cancel();
+    } catch {
+      /* ignore */
+    }
   }
 }

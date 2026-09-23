@@ -1,28 +1,19 @@
 node_modules/
+.expo/
+.expo-shared/
 dist/
-dev-dist/
+web-build/
 coverage/
 release/
+android/
+ios/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
 .DS_Store
 *.log
 .env*
-# Android
-android/.gradle/
-android/build/
-android/app/build/
-android/local.properties
-android/.idea/
-android/*.iml
-android/app/*.iml
-android/captures/
-# iOS
-ios/App/Pods/
-ios/App/build/
-ios/App/App.xcworkspace/xcuserdata/
-ios/App/App.xcodeproj/xcuserdata/
-ios/App/DerivedData/
-# 서명 키 (절대 커밋 금지)
-android/keystore/
-android/keystore.properties
-*.jks
-*.keystore
+expo-env.d.ts
