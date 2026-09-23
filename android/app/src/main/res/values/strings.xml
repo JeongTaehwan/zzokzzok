@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">쪽쪽</string>
+    <string name="title_activity_main">쪽쪽</string>
+    <string name="package_name">com.zzokzzok.app</string>
+    <string name="custom_url_scheme">com.zzokzzok.app</string>
+</resources>
