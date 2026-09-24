@@ -17,7 +17,8 @@
     "build:android:apk": "eas build -p android --profile preview",
     "build:android:store": "eas build -p android --profile production",
     "build:ios": "eas build -p ios --profile production",
-    "update:publish": "eas update --branch preview --message"
+    "update:publish": "eas update --branch preview --message",
+    "build:android:apk:local": "bash scripts/build-apk.sh"
   },
   "jest": {
     "preset": "jest-expo",

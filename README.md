@@ -42,6 +42,16 @@ npm run build:ios                  # → iOS 빌드 (Apple 개발자 계정 필�
 
 빌드는 Expo 클라우드에서 돌고 완료되면 다운로드 링크/QR 이 나온다. 자세한 절차는 [배포 가이드](docs/04-배포가이드.md).
 
+### Expo 계정 없이 이 PC 에서 APK 만들기
+
+```bash
+npm run build:android:apk:local     # scripts/build-apk.sh → release/zzokzzok-<버전>.apk
+```
+
+`expo prebuild` 로 네이티브 프로젝트를 만들고 `credentials/` 의 서명 키로 Gradle 릴리스 빌드를 한다.
+JDK 21 · Android SDK(36) · NDK 27.1 · CMake 는 `~/.local` 에 설치되어 있다 (`scripts/android-env.sh`).
+**`credentials/` 폴더(서명 키)는 git 에 없으니 꼭 백업할 것.**
+
 ## 프로젝트 구조
 
 ```
