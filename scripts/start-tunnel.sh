@@ -25,7 +25,7 @@ trap 'kill $CFPID 2>/dev/null || true' EXIT
 
 HOST=""
 for _ in $(seq 1 40); do
-  HOST="$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$LOG" | head -1 | sed 's#https://##')"
+  HOST="$( (grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$LOG" || true) | head -1 | sed 's#https://##')"
   [ -n "$HOST" ] && break
   sleep 1
 done
